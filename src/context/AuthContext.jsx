@@ -3,21 +3,23 @@ import api from '../api/axios';
 
 const AuthContext = createContext(null);
 
-// Robust JWT Parser to handle token persistence on reload
 const parseJwt = (token) => {
     try {
         if (!token) return null;
         const base64Url = token.split('.')[1];
         if (!base64Url) return null;
-        
+
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        
+        const jsonPayload = decodeURIComponent(
+            window.atob(base64)
+                .split('')
+                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+
         return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error("Token parsing failed", e);
+    } catch (err) {
+        console.error("JWT Parse Error:", err);
         return null;
     }
 };
@@ -26,64 +28,81 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // FIX: Persist User on Page Refresh
+    // Restore login on refresh
     useEffect(() => {
-        const initializeAuth = () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                const decoded = parseJwt(token);
-                // Check if token exists and is not expired
-                if (decoded && decoded.exp * 1000 > Date.now()) {
-                    // Normalize Role (Handle Microsoft URL style or simple 'role')
-                    const role = decoded.role || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || "Employee";
-                    const deptId = decoded.DepartmentId || null;
+        const storedUser = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
 
-                    // Set user data immediately
-                    setUser({
-                        id: decoded.nameid || decoded.sub,
-                        email: decoded.email,
-                        role: role,
-                        fullName: decoded.unique_name || "User",
-                        deptId: deptId
-                    });
-                } else {
-                    // Token invalid or expired
-                    localStorage.removeItem('token');
-                    setUser(null);
-                }
-            }
+        // 🟣 STEP 1 — If user object exists, restore it instantly
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
             setLoading(false);
-        };
+            return;
+        }
 
-        initializeAuth();
+        // 🟣 STEP 2 — If token exists, decode JWT and rebuild user
+        if (token) {
+            const decoded = parseJwt(token);
+
+            if (!decoded || decoded.exp * 1000 < Date.now()) {
+                localStorage.removeItem('token');
+                setUser(null);
+                setLoading(false);
+                return;
+            }
+
+            const restoredUser = {
+                id: decoded.nameid,
+                email: decoded.email,
+                fullName: decoded.fullName || decoded.unique_name,
+                role: Array.isArray(decoded.role) ? decoded.role[0] : decoded.role,
+                deptId: decoded.DepartmentId ? parseInt(decoded.DepartmentId) : null
+            };
+
+            setUser(restoredUser);
+
+            // Save rebuilt user in localStorage
+            localStorage.setItem('user', JSON.stringify(restoredUser));
+        }
+
+        setLoading(false);
     }, []);
 
+    // Login
     const login = async (email, password) => {
         try {
             const response = await api.post('/Auth/login', { email, password });
-            const { token, role, fullName, userId, departmentId } = response.data;
+            const data = response.data;
 
-            localStorage.setItem('token', token);
-            
-            setUser({
-                id: userId,
-                email,
-                role,
-                fullName,
-                deptId: departmentId
-            });
+            const newUser = {
+                id: data.userId,
+                email: data.email,
+                fullName: data.fullName,
+                role: data.role,
+                deptId: data.departmentId
+            };
+
+            // Save token + full user object
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(newUser));
+
+            setUser(newUser);
+
             return { success: true };
+
         } catch (error) {
-            console.error("Login Error:", error);
-            return { 
-                success: false, 
-                message: error.response?.data?.message || "Login failed. Check credentials." 
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Login failed. Invalid username or password."
             };
         }
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setUser(null);
     };
 

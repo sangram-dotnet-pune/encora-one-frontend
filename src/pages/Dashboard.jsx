@@ -16,6 +16,9 @@ const Dashboard = () => {
     const [selectedComplaint, setSelectedComplaint] = useState(null);
     const [complaints, setComplaints] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // NEW: State for Status Filter
+    const [statusFilter, setStatusFilter] = useState('All');
 
     const isManager = user?.role === 'Manager';
     const isAdmin = user?.role === 'Admin';
@@ -27,11 +30,10 @@ const Dashboard = () => {
         try {
             let endpoint = '/Complaint/my-complaints';
 
-            // FIX: Admin sees ALL, Manager sees Department, Employee sees Own
+            // Admin sees ALL, Manager sees Department, Employee sees Own
             if (isAdmin) {
                 endpoint = '/Complaint/all';
             } else if (isManager) {
-                // If deptId is missing (legacy user), default to 0
                 const deptId = user.deptId || 0;
                 endpoint = `/Complaint/department/${deptId}`;
             }
@@ -56,12 +58,21 @@ const Dashboard = () => {
         setIsUpdateModalOpen(true);
     };
 
-    // Filter Logic
-    const filteredComplaints = complaints.filter(c => 
-        c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.complaintId.toString().includes(searchTerm)
-    );
+    // UPDATED: Filter Logic (Search + Status)
+    const filteredComplaints = complaints.filter(c => {
+        // 1. Search Filter
+        const matchesSearch = 
+            c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.complaintId.toString().includes(searchTerm);
+
+        // 2. Status Filter
+        // Normalize strings to handle "In Progress" vs "InProgress" discrepancies
+        const normalize = (str) => str?.replace(/\s/g, '').toLowerCase() || '';
+        const matchesStatus = statusFilter === 'All' || normalize(c.status) === normalize(statusFilter);
+
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
@@ -131,17 +142,30 @@ const Dashboard = () => {
                                         )}
                                     </header>
 
-                                    {/* Search Bar */}
+                                    {/* UPDATED: Filter & Search Bar */}
                                     <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-2">
                                         <div className="relative flex-1">
                                             <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                            <input 
-                                                type="text" 
-                                                placeholder="Search by title, ID or description..." 
+                                            <input
+                                                type="text"
+                                                placeholder="Search by title, ID or description..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-2 bg-transparent outline-none text-slate-700 placeholder:text-slate-400" 
+                                                className="w-full pl-10 pr-4 py-2 bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
                                             />
+                                        </div>
+                                        <div className="flex items-center border-t md:border-t-0 md:border-l border-slate-100 pt-2 md:pt-0 md:pl-2">
+                                            <Filter className="w-4 h-4 text-slate-400 ml-2" />
+                                            <select 
+                                                value={statusFilter}
+                                                onChange={(e) => setStatusFilter(e.target.value)}
+                                                className="bg-transparent outline-none text-slate-600 text-sm font-medium py-2 pl-2 pr-4 cursor-pointer hover:text-violet-600 transition-colors"
+                                            >
+                                                <option value="All">All Status</option>
+                                                <option value="Pending">Pending</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="Resolved">Resolved</option>
+                                            </select>
                                         </div>
                                     </div>
                                     
@@ -150,6 +174,7 @@ const Dashboard = () => {
                                             <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                                                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4"><FileText className="w-8 h-8 text-slate-400" /></div>
                                                 <h3 className="text-lg font-medium text-slate-900">No complaints found</h3>
+                                                <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filters.</p>
                                             </div>
                                         ) : (
                                             filteredComplaints.map((c) => (
