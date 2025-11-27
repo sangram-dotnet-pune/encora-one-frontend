@@ -1,24 +1,21 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-// import { NotificationProvider } from './context/NotificationContext'; // Assuming this exists from context, optional if removed
+import { NotificationProvider } from './context/NotificationContext'; // NEW Import
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Reports from './pages/Reports';
 import MainLayout from './components/layout/MainLayout';
+import NotificationToast from './components/ui/NotificationToast'; // NEW Import
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, roleRequired }) => {
     const { user, loading } = useAuth();
     
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-                Loading...
-            </div>
-        );
-    }
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Loading...</div>;
+    if (!user) return <Navigate to="/login" />;
     
-    if (!user) {
-        return <Navigate to="/login" />;
+    if (roleRequired && !['Manager', 'Admin'].includes(user.role)) {
+        return <Navigate to="/dashboard" />;
     }
     
     return children;
@@ -27,28 +24,29 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
     return (
         <AuthProvider>
-            {/* Optional: <NotificationProvider> */}
+            <NotificationProvider> {/* Wrap App */}
                 <Router>
+                    <NotificationToast /> {/* Add Toast Container */}
                     <Routes>
                         <Route path="/login" element={<Login />} />
                         
-                        {/* Protected Routes Wrapped in Main Layout */}
-                        <Route element={
-                            <ProtectedRoute>
-                                <MainLayout />
-                            </ProtectedRoute>
-                        }>
+                        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             
-                            {/* Future routes can be added here easily */}
-                            {/* <Route path="/attendance" element={<Attendance />} /> */}
+                            <Route 
+                                path="/reports" 
+                                element={
+                                    <ProtectedRoute roleRequired={true}>
+                                        <Reports />
+                                    </ProtectedRoute>
+                                } 
+                            />
                         </Route>
                         
-                        {/* Default Redirect */}
                         <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Routes>
                 </Router>
-            {/* </NotificationProvider> */}
+            </NotificationProvider>
         </AuthProvider>
     );
 };
