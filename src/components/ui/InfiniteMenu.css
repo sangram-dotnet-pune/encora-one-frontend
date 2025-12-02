@@ -1,0 +1,133 @@
+/* src/components/ui/InfiniteMenu.css */
+
+#infinite-grid-menu-canvas {
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  outline: none;
+  touch-action: none; /* Prevents scroll on mobile while interacting */
+}
+
+#infinite-grid-menu-canvas:active {
+  cursor: grabbing;
+}
+
+/* --- Action Button (The Link Icon) --- */
+.action-button {
+  position: absolute;
+  left: 50%;
+  bottom: -80px; /* Hidden state */
+  z-index: 10;
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  background: #8b5cf6; /* Violet-500 matches your theme */
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 4px solid #000;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.action-button:hover {
+  transform: translateX(-50%) scale(1.1) !important;
+  background: #a78bfa;
+}
+
+.action-button.active {
+  bottom: 10%;
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.action-button.inactive {
+  bottom: -80px;
+  transform: translateX(-50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.action-button-icon {
+  user-select: none;
+  position: relative;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* --- Face Title (Name) --- */
+.face-title {
+  user-select: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-weight: 900;
+  font-size: 3.5rem;
+  letter-spacing: -0.02em;
+  color: white;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.face-title.active {
+  opacity: 1;
+  transform: translate(-50%, -140%);
+  transition: opacity 0.4s ease, transform 0.4s ease-out;
+}
+
+.face-title.inactive {
+  opacity: 0;
+  transform: translate(-50%, -120%);
+  transition: opacity 0.2s ease, transform 0.2s ease-in;
+}
+
+/* --- Face Description (Role) --- */
+.face-description {
+  user-select: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 1.25rem;
+  color: #a78bfa; /* Violet-400 */
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgba(0,0,0,0.6);
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.face-description.active {
+  opacity: 1;
+  transform: translate(-50%, 150%); /* Positioned below center */
+  transition: opacity 0.4s ease 0.1s, transform 0.4s ease-out 0.1s;
+}
+
+.face-description.inactive {
+  opacity: 0;
+  transform: translate(-50%, 180%);
+  transition: opacity 0.2s ease, transform 0.2s ease-in;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .face-title {
+    font-size: 2rem;
+  }
+  .face-description {
+    font-size: 0.9rem;
+    width: max-content;
+  }
+}
