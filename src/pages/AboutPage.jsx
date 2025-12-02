@@ -5,43 +5,90 @@ import {
   Server, Database, Code2, Globe 
 } from 'lucide-react';
 import GlassNavbar from '../components/ui/GlassNavbar.jsx';
-import InfiniteMenu from '../components/ui/InfiniteMenu.jsx';
 
 // --- TEAM DATA ---
 const teamMembers = [
   {
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://i.ibb.co/0jfgjrmm/Pics-Art-11-06-09-09-43.jpg',
     link: '#',
     title: 'Roshan Wadhai',
     description: 'Full Stack Developer'
   },
   {
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://i.ibb.co/cn0mV02/IMG-20251202-WA0004.jpg',
     link: '#',
     title: 'Sangram Sankpal',
     description: 'Backend Developer'
   },
   {
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://i.ibb.co/m5xXb1cP/IMG-20251202-WA0005.jpg',
     link: '#',
     title: 'Sujal Koli',
     description: 'Full Stack Developer'
   },
   {
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://i.ibb.co/PGJQ23nj/YASH.png',
     link: '#',
     title: 'Yashraj Chavan',
-    description: 'Deadly Frontend Developer'
+    description: 'Frontend Developer'
   },
   {
-    image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://i.ibb.co/C3YbNZd2/IMG-20251202-WA0006.jpg',
     link: '#',
-    title: 'Dipanshu Mondal',
+    title: 'Dipanshu Mandal',
     description: 'Frontend Developer'
   }
 ];
 
-// --- COMPONENTS ---
+// --- INLINE COMPONENTS ---
+
+// 1. Fixed Infinite Menu (Text On Top of Image)
+const InfiniteMenu = ({ items }) => {
+  return (
+    <div className="relative flex w-full overflow-hidden mask-image-gradient">
+      <motion.div
+        className="flex gap-8 py-4"
+        // Move -50% because we duplicate the items array
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ 
+          duration: 30, 
+          ease: "linear", 
+          repeat: Infinity 
+        }}
+        // Hover to pause scrolling
+        whileHover={{ animationPlayState: "paused" }} 
+      >
+        {/* We double the items list to create the seamless loop */}
+        {[...items, ...items].map((item, idx) => (
+          <div 
+            key={idx} 
+            className="relative w-[300px] h-[450px] flex-shrink-0 rounded-3xl overflow-hidden group border border-white/10 shadow-2xl bg-slate-900"
+          >
+            {/* IMAGE - Z-Index 0 */}
+            <img
+              src={item.image}
+              alt={item.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            
+            {/* GRADIENT OVERLAY - Z-Index 10 (Makes text readable) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 z-10" />
+
+            {/* TEXT CONTENT - Z-Index 20 (Sits on TOP of image) */}
+            <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
+              <h3 className="text-2xl font-bold text-white mb-1 drop-shadow-md">
+                {item.title}
+              </h3>
+              <p className="text-violet-400 font-medium tracking-wide text-sm drop-shadow-md bg-violet-500/10 inline-block px-2 py-1 rounded-md border border-violet-500/20 backdrop-blur-sm self-start">
+                {item.description}
+              </p>
+            </div>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+};
 
 const SectionHeader = ({ title, subtitle }) => (
   <div className="text-center mb-20 relative z-10">
@@ -128,7 +175,6 @@ const AboutPage = () => {
       <div className="relative w-full h-screen overflow-hidden bg-[#050505]">
         
         {/* 1. Spline 3D Viewer Background (Hero) */}
-        {/* h-[115%] pushes watermark off screen */}
         <div className={`absolute inset-x-0 top-0 h-[115%] z-0 transition-all duration-[1500ms] ease-out transform ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-110 blur-lg'}`}>
           <spline-viewer 
             url="https://prod.spline.design/PXx275Yj23goXwsK/scene.splinecode"
@@ -179,7 +225,7 @@ const AboutPage = () => {
             subtitle="The minds behind the magic of EncoraOne."
           />
           {/* The Infinite Menu Container */}
-          <div style={{ height: '700px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
               <InfiniteMenu items={teamMembers} />
           </div>
       </section>
@@ -286,7 +332,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* 5. TECH STACK (SEPARATED FROM ROBOT) */}
+      {/* 5. TECH STACK */}
       <section className="py-32 px-6 border-t border-white/10 bg-[#080808]">
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-16 drop-shadow-lg">Powered By Modern Engineering</h2>
@@ -302,19 +348,19 @@ const AboutPage = () => {
 
       {/* 6. BOTTOM ROBOT VISUAL SECTION + FOOTER TEXT OVERLAY */}
       <div className="relative w-full h-[600px] overflow-hidden bg-[#050505] border-t border-white/5">
-         
-         {/* Spline Viewer Container - Scaled to hide watermark */}
-         <div className={`absolute inset-x-0 top-0 h-[120%] transition-all duration-[2000ms] ${isLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-lg'}`}>
-           <spline-viewer 
+          
+          {/* Spline Viewer Container - Scaled to hide watermark */}
+          <div className={`absolute inset-x-0 top-0 h-[120%] transition-all duration-[2000ms] ${isLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-lg'}`}>
+            <spline-viewer 
               url="https://prod.spline.design/a6XkQdgy5sjlsweN/scene.splinecode"
               style={{ width: '100%', height: '100%' }}
-           />
+            />
         </div>
 
         {/* Vignette to blend edges */}
         <div className="absolute inset-0 pointer-events-none bg-radial-gradient-fade" />
 
-        {/* COPYRIGHT OVERLAY (No Background, No Footer) */}
+        {/* COPYRIGHT OVERLAY */}
         <div className="absolute bottom-10 inset-x-0 z-20 pointer-events-none flex justify-center">
             <p className="text-slate-500 text-xs font-medium uppercase tracking-[0.2em] opacity-80 mix-blend-screen">
                 &copy; 2025 EncoraOne. Transforming Workplaces.
