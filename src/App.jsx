@@ -79,7 +79,7 @@ const ChatbotPopup = () => {
         // const apiKey = process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY || "";
         // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKe…
  
-        const apiKey = "AIzaSyCITrwdqLW1pK2GOSJRHbhpTiJllhlOn-w";
+        const apiKey = "AIzaSyDeY-NAi_rOZMR5wluNq5AqqLFLWRPLoc8";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
  
  
